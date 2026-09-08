@@ -545,9 +545,11 @@ rather than spread evenly across many.
 2 components (for visualization) retains just the first two bars of the
 explained-variance chart — typically well under half of total variance — so
 2D scatter plots are a useful *sanity check* but necessarily discard a
-majority of the behavioral signal. Keeping ~6–8 components retains ~90%+ of
-the variance, so most of the informative structure is preserved while
-removing redundant/noisy directions.
+majority of the behavioral signal. Keeping ~10–12 components (the number
+needed to cross the 90–95% thresholds, per the printed output above) retains
+the large majority of the variance, so most of the informative structure is
+preserved while still removing several redundant/noisy directions relative
+to the original 17.
 
 **Which variables are strongly correlated, and how does this affect PCA?**
 As seen in the Section 2 correlation heatmap, `PURCHASES` is highly
@@ -903,6 +905,33 @@ plt.title(f"Hierarchical Clusters (subsample, k={optimal_kmeans_k}) on PCA Proje
 plt.legend(*scatter_plot.legend_elements(), title="Cluster", bbox_to_anchor=(1.02, 1), loc="upper left")
 plt.tight_layout()
 plt.show()
+""")
+
+code("""
+# Real-world interpretation: mean original-scale feature profile per hierarchical cluster
+# (computed on the same subsample the clustering itself was fit on).
+hierarchical_sample_original_scale = numeric_customer_data.iloc[hierarchical_sample_indices]
+hierarchical_cluster_profile = hierarchical_sample_original_scale.groupby(hierarchical_cluster_labels_sample).mean().round(1)
+hierarchical_cluster_profile
+""")
+
+md("""
+**Real-world interpretation.** Comparing this profile table to the K-Means
+one from Section 4.1, Ward-linkage hierarchical clustering — fit
+independently, via a completely different bottom-up merging procedure —
+recovers a **similar segmentation story**: a low-activity/low-balance group,
+a purchase-driven group with high `PURCHASES`/`PURCHASES_TRX`, and a
+cash-advance-reliant group with elevated `CASH_ADVANCE`/
+`CASH_ADVANCE_FREQUENCY`. This cross-method agreement (K-Means and Ward
+both directly minimize within-cluster variance, as noted in 4.5) is a
+reassuring consistency check: the "purchasing activity" vs. "cash-advance
+reliance" split is not an artifact of one particular algorithm, but shows up
+whenever a variance-minimizing objective is applied to this data — the same
+two dominant axes PCA's PC1/PC2 loadings identified in Section 3. Any
+differences between the two tables (e.g., slightly different cluster sizes
+or boundary customers) are attributable to the subsampling and to the
+different bottom-up vs. iterative-refinement mechanics of the two
+algorithms, not to a disagreement about the underlying customer segments.
 """)
 
 md("""
